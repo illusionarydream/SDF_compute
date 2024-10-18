@@ -21,7 +21,7 @@ class UnionFind:
         self.parent[self.find(x)] = self.find(y)
 
 
-class SDF:
+class Naive_SDF:
     def __init__(self, point_cloud):
         self.point_cloud = point_cloud
         self.kdtree = KDTree(point_cloud)
@@ -192,10 +192,12 @@ def generate_plane_point_cloud(width, height, num_points):
     return point_cloud
 
 
-radius = 1.0
-num_points = 1000
-point_cloud = generate_sphere_point_cloud(radius, num_points)
-# point_cloud = generate_plane_point_cloud(2, 2, num_points)
-sdf = SDF(point_cloud)
-# sdf.render_figure()
-sdf.plot_sdf()
+if __name__ == '__main__':
+
+    radius = 1.0
+    num_points = 1000
+    point_cloud = generate_sphere_point_cloud(radius, num_points)
+    # point_cloud = generate_plane_point_cloud(2, 2, num_points)
+    sdf = Naive_SDF(point_cloud)
+    # sdf.render_figure()
+    sdf.plot_sdf()
