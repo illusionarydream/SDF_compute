@@ -18,10 +18,10 @@ class Interpolated_SDF:
         self.sample_points = list(self.point_cloud)
         self.sample_sdf = list(np.zeros(len(self.sample_points)))
         # random sample more points
-        self.x_bias = (self.max_x - self.min_x) / 4
-        self.y_bias = (self.max_y - self.min_y) / 4
-        self.z_bias = (self.max_z - self.min_z) / 4
-        for i in range(200):
+        self.x_bias = (self.max_x - self.min_x)
+        self.y_bias = (self.max_y - self.min_y)
+        self.z_bias = (self.max_z - self.min_z)
+        for i in range(500):
             self.sample_points.append([random.uniform(self.min_x - self.x_bias, self.max_x + self.x_bias),
                                        random.uniform(
                                       self.min_y - self.y_bias, self.max_y + self.y_bias),
@@ -33,7 +33,7 @@ class Interpolated_SDF:
             pass
 
         if self.method == 'RBF':
-            self.RBF_h = 0.6
+            self.RBF_h = 0.4
             self.RBF_weights = self._RBF_weights()
 
     def plot_sdf(self, resolution=20):
@@ -68,7 +68,7 @@ class Interpolated_SDF:
 
     def _get_point_sdf(self, point):
         if self.method == 'Shepard':
-            return self._shepard_interpolation(point, 2)
+            return self._shepard_interpolation(point, 20)
 
         if self.method == 'RBF':
             return self._RBF_interpolation(point)
@@ -83,7 +83,7 @@ class Interpolated_SDF:
         for i in range(len(self.sample_points)):
             # compute weight
             weight.append(1 / np.linalg.norm(
-                np.array(self.sample_points[i]) - np.array(point))**(-p))
+                np.array(self.sample_points[i]) - np.array(point))**p)
         # normalize weight
         weight = weight / np.sum(weight)
         # compute the sdf
@@ -126,8 +126,10 @@ class Interpolated_SDF:
         return sdf
 
 
-radius = 1.0
-num_points = 200
-point_cloud = generate_sphere_point_cloud(radius, num_points)
-sdf = Interpolated_SDF(point_cloud, method='RBF')
-sdf.plot_sdf(20)
+if __name__ == '__main__':
+    # generate a sphere point cloud
+    radius = 1.0
+    num_points = 200
+    point_cloud = generate_sphere_point_cloud(radius, num_points)
+    sdf = Interpolated_SDF(point_cloud, method='RBF')
+    sdf.plot_sdf(20)

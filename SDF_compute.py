@@ -25,6 +25,9 @@ class Naive_SDF:
     def __init__(self, point_cloud):
         self.point_cloud = point_cloud
         self.kdtree = KDTree(point_cloud)
+        self.min_x, self.min_y, self.min_z = np.min(point_cloud, axis=0)
+        self.max_x, self.max_y, self.max_z = np.max(point_cloud, axis=0)
+
         self.normals = []
         self.MST = None
         self._compute_normals(point_cloud, 10)
