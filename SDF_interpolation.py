@@ -21,13 +21,20 @@ class Interpolated_SDF:
         self.x_bias = (self.max_x - self.min_x) / 4
         self.y_bias = (self.max_y - self.min_y) / 4
         self.z_bias = (self.max_z - self.min_z) / 4
-        for i in range(500):
+        for i in range(200):
             self.sample_points.append([random.uniform(self.min_x - self.x_bias, self.max_x + self.x_bias),
                                        random.uniform(
                                       self.min_y - self.y_bias, self.max_y + self.y_bias),
                 random.uniform(self.min_z - self.z_bias, self.max_z + self.z_bias)])
             self.sample_sdf.append(
                 self.coarse_sdf._get_point_sdf(self.sample_points[-1]))
+
+        if self.method == 'Shepard':
+            pass
+
+        if self.method == 'RBF':
+            self.RBF_h = 0.6
+            self.RBF_weights = self._RBF_weights()
 
     def plot_sdf(self, resolution=20):
         # Generate grid points
@@ -62,8 +69,13 @@ class Interpolated_SDF:
     def _get_point_sdf(self, point):
         if self.method == 'Shepard':
             return self._shepard_interpolation(point, 2)
-        print(1)
+
+        if self.method == 'RBF':
+            return self._RBF_interpolation(point)
+
         return self.coarse_sdf._get_point_sdf(point)
+
+    # * Shepard interpolation
 
     def _shepard_interpolation(self, point, p):
         # * Implement the shepard interpolation here
@@ -81,9 +93,41 @@ class Interpolated_SDF:
 
         return sdf
 
+    # * RBF interpolation
+    def _radial_basis_function(self, x, c, h):
+        # x, c are vectors
+        return np.exp(-np.linalg.norm(x - c)**2 / h**2)
+
+    def _RBF_weights(self):
+        # * Implement the RBF weights computation here
+        radius_matrix = np.zeros(
+            (len(self.sample_points), len(self.sample_points)))
+        for i in range(len(self.sample_points)):
+            for j in range(0, i+1):
+                if i == j:
+                    radius_matrix[i, j] = 1
+                else:
+                    radius_matrix[i, j] = radius_matrix[j, i] = self._radial_basis_function(
+                        np.array(self.sample_points[i]), np.array(self.sample_points[j]), self.RBF_h)
+        # radius_matrix * weights = sample_sdf
+        # weights = radius_matrix^-1 * sample_sdf
+        radius_matrix_inv = np.linalg.inv(radius_matrix)
+        weights = np.dot(radius_matrix_inv, self.sample_sdf)
+
+        return weights
+
+    def _RBF_interpolation(self, point):
+        # * Implement the RBF interpolation here
+        sdf = 0
+        for i in range(len(self.sample_points)):
+            sdf += self.RBF_weights[i] * self._radial_basis_function(
+                np.array(point), np.array(self.sample_points[i]), self.RBF_h)
+
+        return sdf
+
 
 radius = 1.0
-num_points = 1000
+num_points = 200
 point_cloud = generate_sphere_point_cloud(radius, num_points)
-sdf = Interpolated_SDF(point_cloud, method='Shepard')
+sdf = Interpolated_SDF(point_cloud, method='RBF')
 sdf.plot_sdf(20)
